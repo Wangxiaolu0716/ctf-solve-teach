@@ -1,0 +1,11 @@
+# 解题产物不进仓库（含 flag / 附件 / 他人题目内容）
+solves/
+
+# Python
+__pycache__/
+*.pyc
+
+# 编辑器 / 系统
+.DS_Store
+.vscode/
+.idea/
