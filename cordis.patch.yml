@@ -1,0 +1,7 @@
+# dsh-ctf-solve-teach 组合包补丁：把「教学式 CTF 解题」技能插件插入 profile。
+# 插件加载即把 ctf-solve-teach 注册进 ctx.skills，无需任何配置。
+#
+- insert:
+    - id: ctf-solve-teach
+      name: 'dsh-ctf-solve-teach'
+      config: {}

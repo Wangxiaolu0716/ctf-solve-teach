@@ -31,7 +31,8 @@ metadata:
 
 ## 1. 开工：先建目录，再碰附件（禁止先 `cat` 再补目录）
 
-`<SKILL_DIR>` 指本 skill 所在目录（DSH 默认 `~/.dsh/skills/ctf-solve-teach`）。
+`<SKILL_DIR>` 指本 skill 所在目录：纯 skill 安装时是 `~/.dsh/skills/ctf-solve-teach`；
+通过 DSH 插件安装时，以宿主注入的 `Base directory for this skill` 为准（通常在 npm 全局目录下）。
 
 **Windows / PowerShell：**
 

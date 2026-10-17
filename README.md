@@ -4,7 +4,12 @@
 > 收尾自动在 `solves/<题目名>/` 里产出可复现的完整 Writeup。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-5b8def)
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-blue)
+![npm](https://img.shields.io/npm/v/dsh-ctf-solve-teach)
+
+**两种用法**：作为 DSH 插件安装（npm: `dsh-ctf-solve-teach`，装完技能自动出现在技能目录），
+或者把 `skills/ctf-solve-teach/` 整个复制进任意 agent 的 skill 目录。
 
 ---
 
@@ -75,31 +80,40 @@ solves/真的假的/
 
 ## 安装
 
-Skill 就是"一个带 `SKILL.md` 的目录"，各家 agent 放的位置不同。
+本仓库同时是 **DSH 插件**（npm 包 `dsh-ctf-solve-teach`）和 **独立 skill**，按需选一种。
 
+### 方式一：DSH 插件市场（推荐）
 
-### DSH（本仓库的开发环境）
+在 DSH 里打开插件市场，搜索任一关键词：
+
+```text
+ctf    教学式 CTF    writeup    网络安全    取证
+```
+
+装完重启 DSH，技能目录里直接出现 `ctf-solve-teach`，不用再手动放文件。
+
+插件的工作方式：`cordis.patch.yml` 把插件插进 profile，插件启动时读包内的
+`skills/ctf-solve-teach/SKILL.md`，调用 `ctx.skills.register()` 注册成 runtime skill，
+并把 `references/` 与 `scripts/` 作为 `resourceBase` 一起交出去——所以模型读到的是完整技能，
+相对路径也能正确解析到示例与脚本。
+
+### 方式二：纯 skill（不装插件，任何 agent 通用）
 
 ```bash
-git clone https://github.com/Wangxiaolu0716/ctf-solve-teach.git "$HOME/.dsh/skills/ctf-solve-teach"
+git clone https://github.com/Wangxiaolu0716/ctf-solve-teach.git /tmp/cst
+cp -r /tmp/cst/skills/ctf-solve-teach ~/.dsh/skills/
 ```
 
-PowerShell：
+Claude Code 把目标换成 `~/.claude/skills/`；其他 agent 同理，只要它的 skill 目录认 `SKILL.md`。
 
-```powershell
-git clone https://github.com/Wangxiaolu0716/ctf-solve-teach.git "$HOME\.dsh\skills\ctf-solve-teach"
-```
-
-### Claude Code
+### 方式三：本地开发
 
 ```bash
-git clone https://github.com/Wangxiaolu0716/ctf-solve-teach.git "$HOME/.claude/skills/ctf-solve-teach"
+git clone https://github.com/Wangxiaolu0716/ctf-solve-teach.git
+cd ctf-solve-teach
+node --test          # 插件冒烟测试，4 条
+npm pack --dry-run   # 看会发布哪些文件
 ```
-
-### 其他 agent（Cursor / Cline / OpenHands / 自研框架）
-
-把整个目录丢进它的 skill 目录，或在系统提示里附上 `SKILL.md` 的正文。
-`SKILL.md` 是自包含的；`references/` 是可选深水区资料，需要时再读。
 
 ---
 
@@ -119,10 +133,10 @@ Agent 会自动：建目录 → 建情报卡 → 逐步解题并讲解 → 收�
 
 ```bash
 # 建目录骨架（可带附件，会复制进 artifacts/）
-python scripts/new_solve.py "题目名" --src 附件或目录 --category misc
+python skills/ctf-solve-teach/scripts/new_solve.py "题目名" --src 附件或目录 --category misc
 
 # 交付前自检
-python scripts/check_doc.py "solves/题目名"
+python skills/ctf-solve-teach/scripts/check_doc.py "solves/题目名"
 ```
 
 `new_solve.py` 是幂等的：目录已存在时只补缺失文件，不会覆盖你写了一半的 README。
@@ -132,20 +146,39 @@ python scripts/check_doc.py "solves/题目名"
 ## 目录结构
 
 ```
-ctf-solve-teach/
-├── SKILL.md                       # 主文件：三条承诺 + 七问循环 + 判型表 + 纪律
-├── references/
-│   ├── triage.md                  # 60 秒判型决策树（按附件类型分流）
-│   ├── toolbox.md                 # 工具库：用途/命令/备选/何时别用
-│   ├── knowledge-index.md         # 知识点索引（ID 化，含深水区展开）
-│   └── writeup-template.md        # README 模板
-├── scripts/
-│   ├── new_solve.py               # 建目录骨架
-│   └── check_doc.py               # 交付质量门
-├── examples/                      # 真实跑通的示例解题目录
-├── LICENSE
-└── README.md
+ctf-solve-teach/                    # npm 包 dsh-ctf-solve-teach
+├── package.json                    # 包元数据，dsh.bundle.patch 指向下面的补丁
+├── cordis.patch.yml                # 把插件插进 DSH profile 的 4 行补丁
+├── plugin/
+│   └── index.js                    # 零依赖：读 SKILL.md → ctx.skills.register()
+├── test/
+│   └── smoke.test.mjs              # 冒烟测试：解析/注册/卸载/frontmatter
+└── skills/ctf-solve-teach/         # ← 技能本体，可单独复制进任何 agent
+    ├── SKILL.md                    # 三条承诺 + 七问循环 + 判型表 + 纪律
+    ├── references/
+    │   ├── triage.md               # 60 秒判型决策树（按附件类型分流）
+    │   ├── toolbox.md              # 工具库：用途/命令/备选/何时别用
+    │   ├── knowledge-index.md      # 知识点索引（ID 化，含深水区展开）
+    │   └── writeup-template.md     # README 模板
+    ├── scripts/
+    │   ├── new_solve.py            # 建目录骨架
+    │   └── check_doc.py            # 交付质量门
+    └── examples/                   # 真实跑通、已过质量门的示例
 ```
+
+### 插件是怎么工作的（60 行代码）
+
+`package.json` 里的 `dsh.bundle.patch` 指向 `cordis.patch.yml`，DSH 安装时读这段补丁把插件挂进 profile：
+
+```yaml
+- insert:
+    - id: ctf-solve-teach
+      name: 'dsh-ctf-solve-teach'
+      config: {}
+```
+
+插件启动后只做三件事：读 `SKILL.md`、剥掉 frontmatter、调 `ctx.skills.register()`。
+同一份内容在插件里注册一次，文件系统 provider 那边就不用再放一份——runtime skill 优先级高于 user 层。
 
 ---
 
@@ -165,9 +198,14 @@ narrates every step — what pattern this is, why this tool, what the underlying
 mechanism is — and finally writes a reproducible writeup into
 `solves/<challenge-name>/` with a 9-section checklist enforced by `check_doc.py`.
 
-Install: copy this directory into your agent's skills folder (e.g.
-`~/.dsh/skills/` or `~/.claude/skills/`). Trigger with "solve this CTF challenge"
-or "teach me while solving".
+Two install paths:
+
+1. **DSH plugin** — npm package `dsh-ctf-solve-teach`. It ships `cordis.patch.yml` and
+   registers the skill on `ctx.skills` at load time; nothing to copy by hand.
+2. **Plain skill** — copy `skills/ctf-solve-teach/` into your agent's skill folder
+   (`~/.dsh/skills/`, `~/.claude/skills/`, …).
+
+Trigger with "solve this CTF challenge" or "teach me while solving".
 
 ---
 

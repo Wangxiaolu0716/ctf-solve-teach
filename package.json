@@ -1,0 +1,56 @@
+{
+  "name": "dsh-ctf-solve-teach",
+  "version": "1.0.0",
+  "description": "DSH 教学式 CTF 解题技能插件：边解边讲套路/工具/知识点，收尾在 solves/<题目名>/ 生成可复现 Writeup。",
+  "type": "module",
+  "main": "plugin/index.js",
+  "exports": {
+    ".": "./plugin/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "plugin",
+    "skills",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "skills",
+    "skill",
+    "ctf",
+    "writeup",
+    "security",
+    "forensics",
+    "steganography",
+    "教学",
+    "网络安全"
+  ],
+  "license": "MIT",
+  "author": "Wangxiaolu0716",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wangxiaolu0716/ctf-solve-teach.git"
+  },
+  "homepage": "https://github.com/Wangxiaolu0716/ctf-solve-teach#readme",
+  "bugs": {
+    "url": "https://github.com/Wangxiaolu0716/ctf-solve-teach/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

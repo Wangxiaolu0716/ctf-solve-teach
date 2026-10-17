@@ -1,0 +1,5 @@
+# 测试与缓存不进 npm 包
+**/__pycache__/
+*.pyc
+test/
+.git*
