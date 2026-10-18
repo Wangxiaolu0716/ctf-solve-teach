@@ -7,9 +7,14 @@
 ![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-5b8def)
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-blue)
 ![npm](https://img.shields.io/npm/v/dsh-ctf-solve-teach)
+![GitHub stars](https://img.shields.io/github/stars/Wangxiaolu0716/ctf-solve-teach?style=flat)
 
-**两种用法**：作为 DSH 插件安装（npm: `dsh-ctf-solve-teach`，装完技能自动出现在技能目录），
-或者把 `skills/ctf-solve-teach/` 整个复制进任意 agent 的 skill 目录。
+**两种用法**：作为 DSH 插件安装（装完技能自动出现在技能目录），或者把 `skills/ctf-solve-teach/` 整个复制进任意 agent 的 skill 目录。
+
+```bash
+dsh plugin add dsh-ctf-solve-teach          # npm 包
+dsh plugin add github:Wangxiaolu0716/ctf-solve-teach   # 或直接从仓库装
+```
 
 ---
 
@@ -82,9 +87,13 @@ solves/真的假的/
 
 本仓库同时是 **DSH 插件**（npm 包 `dsh-ctf-solve-teach`）和 **独立 skill**，按需选一种。
 
-### 方式一：DSH 插件市场（推荐）
+### 方式一：DSH 插件（推荐）
 
-在 DSH 里打开插件市场，搜索任一关键词：
+```bash
+dsh plugin add dsh-ctf-solve-teach
+```
+
+或在插件市场里搜索任一关键词：
 
 ```text
 ctf    教学式 CTF    writeup    网络安全    取证
