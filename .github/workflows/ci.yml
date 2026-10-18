@@ -1,0 +1,26 @@
+# 每次 push / PR 跑测试，不发布。
+# 发布由 publish.yml 在 tag 上触发。
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: 测试
+        run: npm test

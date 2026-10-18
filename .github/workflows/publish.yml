@@ -1,0 +1,53 @@
+# 推送 tag（v*）时自动发布到 npm
+#
+# 认证方式：npm Trusted Publishing (OIDC)，不需要任何长期 token。
+# 前置条件（npm 网页上做一次）：
+#   npmjs.com → 包 dsh-ctf-solve-teach → Settings → Trusted Publisher
+#   填：GitHub owner = Wangxiaolu0716，repo = ctf-solve-teach，
+#       workflow filename = publish.yml，environment 留空
+#
+# 触发：git push origin v1.0.2
+# 版本要求：package.json 的 version 必须与 tag 去掉 v 后完全一致，否则中止。
+
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write   # OIDC 必需
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      # Trusted Publishing 需要较新的 npm
+      - name: 升级 npm
+        run: npm install -g npm@latest && npm --version
+
+      - name: 校验 tag 与 package.json 版本一致
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "package.json = $PKG / tag = $TAG"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::版本不一致：package.json=$PKG，tag=$TAG"
+            exit 1
+          fi
+
+      - name: 测试
+        run: npm test
+
+      - name: 发布（OIDC，自动附带 provenance）
+        run: npm publish --provenance
