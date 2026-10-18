@@ -51,10 +51,29 @@
 | 工具 | 用途 | 命令 | 关键点 |
 |---|---|---|---|
 | `ctf zip` **[本机]** | 结构/伪加密/字典/CRC | `ctf zip f.zip --crack wordlists/top-20000.txt --jobs 16` | 先 `--no-auto` 看结构再决定打法 |
-| bkcrack **[本机]** | ZipCrypto 已知明文攻击 | `bkcrack -C f.zip -c inner.png -p plain.bin` | 需要 ≥12 字节已知明文（PNG 头 16 字节够） |
-| hashcat **[本机]** | 各类哈希爆破 | `hashcat -m 17200 hash.txt dict` | **模式号选错等于白跑**，先 `hashcat --example-hashes` |
+| bkcrack **[本机]** | ZipCrypto 已知明文攻击 | `bkcrack -C f.zip -c inner.png -p plain.bin` | 需要 ≥12 字节已知明文（PNG 头 16 字节够）**只对 method=1 有效** |
+| `aes_zip_decrypt.py` **[本机库]** | WinZip AES 解密 + 爆破 | `python library/zip/aes_zip_decrypt.py f.zip --all -p 口令` | **method=99 专用**；HMAC 校验，不会假命中 |
+| `zipcrypto_tool.py` **[本机库]** | 造 bit3 / 伪加密样本 | `python library/zip/zipcrypto_tool.py make-dd -o t.zip` | 验证自己的爆破器对不对时用 |
+| `rar5parse.py` **[本机库]** | RAR5 头解析 | `python library/misc/rar5parse.py f.rar` | 看块结构、是否整档加密、数据偏移 |
+| hashcat **[本机]** | 各类哈希爆破 | `hashcat -m 17200 hash.txt dict` | **模式号选错等于白跑**，见下表 |
 | john **[通用]** | 同上，自动识别 | `john --wordlist=d hash.txt` | |
 | 7z **[本机]** | 万能解包 | `7z x f -owork/out` | 不认文件名编码时加 `-mcp=936` |
+
+**hashcat 模式号速查（压缩包类，选错就是白跑）**：
+
+| 目标 | 模式 | 说明 |
+|---|---|---|
+| ZIP (ZipCrypto) | 17200 | 老的流密码 |
+| ZIP (WinZip AES) | 13600 | **AES 用这个**，不是 17200 |
+| RAR3-hp | 12500 | |
+| RAR5 | 13000 | |
+| 7z | 11600 | |
+
+> hashcat 破出来的是**口令**，文件还得自己解。AES 解文件用 `aes_zip_decrypt.py`。
+
+**造样本练习**：`7z a -tzip -mem=AES256 -p口令 out.zip file` 能生成 AE-256 样本，
+用来确认自己的解密脚本或 hashcat 模式号没搞错。
+
 
 ## 6. 流量
 

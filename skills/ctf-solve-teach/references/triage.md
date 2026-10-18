@@ -32,6 +32,7 @@ ctf carve artifacts/CHAL -o work/carved
 | 征兆 | 下一步 |
 |---|---|
 | 打不开 / 解码报错 | `ctf png --fix`（CRC + 宽高反推）；JPEG 用 `ctf info` 看是否缺 EOI |
+| **能打开，但文件比结束标记长** | **算差值**：`IEND+8` / `FFD9` / `%%EOF` 与文件实际大小的差 → 尾部附加数据，直接 `carve` |
 | 能打开但看不到东西 | `ctf lsb --auto`；位平面分离（stegsolve）；通道差分 |
 | 末尾有一大段高熵 | `ctf carve`，可能是拼接的 ZIP |
 | 元数据空白但文件不大 | `ctf exif`，看 tEXt/iTXt 注释 |
@@ -44,15 +45,64 @@ ctf carve artifacts/CHAL -o work/carved
 
 ## 3. 压缩包（zip/rar/7z/tar/gz）
 
-1. `7z l` 先列目录（比解压宽容）。记下每个条目的加密标志、CRC、大小。
-2. 加密标志 = 1 但能列 CRC → 先试伪加密修复：`ctf zip --unpseudo`。
-3. 真加密：
-   - ZipCrypto + 有明文片段 → 已知明文攻击（bkcrack）
-   - 小字典 → `ctf zip --crack wordlists/top-20000.txt --jobs 16`
-   - 条目 < 4 字节 → CRC32 碰撞
-   - 有 bit3 数据描述符 → 校验字节失效，用 `--magic 89504e470d0a1a0a` 明文前缀预筛
+1. `7z l` 先列目录（比解压宽容）。记下每个条目的**压缩方法、加密标志、CRC、大小**。
+2. **先看 method 再决定打法**（这一步能省一小时）：
+
+   | method | 名称 | 打法 |
+   |---|---|---|
+   | 0 | Store | 明文，直接读 |
+   | 8 | Deflate | 常规解压 |
+   | 1 | ZipCrypto | 伪加密 / 口令爆破 / bkcrack 明文攻击 |
+   | **99** | **WinZip AES** | **见下面 3.3，hashcat 只破口令、不解文件** |
+
+3. 加密标志 = 1 但能列 CRC → 先试伪加密修复：`ctf zip --unpseudo`。
+
+### 3.1 WinZip AES（method=99）专项
+
+**必须先认出它**，否则会拿 ZipCrypto 的套路白试半天：
+
+- `ctf zip --no-auto` 或 `7z l` 显示 `method=99` / `AES-256`
+- 条目比明文多出 `salt + 2 + 10` 字节（AE-256 是 16+2+10）
+- bkcrack **完全无效**（它只针对 ZipCrypto 的 12 字节流密码）
+- `zip2john` 的校验字节思路也不适用
+
+打法顺序：
+
+```bash
+# 1) 先确认是 AES、看清楚强度
+python library/zip/aes_zip_decrypt.py f.zip -l
+
+# 2) 有线索口令 → 直接解（HMAC 校验，不会假命中）
+python library/zip/aes_zip_decrypt.py f.zip -i flag.png -p 口令 -o out.png
+python library/zip/aes_zip_decrypt.py f.zip --all -p 口令 --check   # 只验不落盘
+
+# 3) 无口令 → 爆破（比 hashcat 慢但零配置；大字典还是上 hashcat -m 13600）
+python library/zip/aes_zip_decrypt.py f.zip --all --brute --wordlist ../wordlists/top-20000.txt --check
+python library/zip/aes_zip_decrypt.py f.zip --all --brute --digits 1 6 --check
+```
+
+口令来源优先级：文件名/注释/题面 → 同目录其它文件（常有一份明文线索）→ 字典 → 数字。
+
+### 3.2 RAR5 结构解析
+
+`unrar` 报错、或想知道里面到底几个文件 / 是否整档加密时，直接解析头：
+
+```bash
+python library/misc/rar5parse.py f.rar
+```
+
+看到 `ENCRYPTION` 块 = 整档加密要口令；看到多个 `FILE` 块 = 套娃，按名字继续拆。
+
+> **坑**：RAR5 的 `HEAD_SIZE` 是**从 `HEAD_TYPE` 起算**的，不含 CRC 和 size 字段本身。
+> 算头长度写成 `off+4+hs` 会差一个 vint 字节，后面全部错位，
+> 表现为 `type` 变成 35、42958046 这类非法值。
+
+### 3.3 其余
+
 4. 注释字段、文件名、时间戳都可能是提示（密码提示常在文件名里）。
 5. 解出来是坏文件 → 回到第 2/3 节修文件。
+6. 多卷/分卷：文件名尾部 `.001` `.part1`，先按序号拼接再解。
+
 
 ## 4. 音频（wav/mp3/flac）
 
@@ -136,6 +186,7 @@ ctf carve artifacts/CHAL -o work/carved
 - [ ] 有没有第二个附件、隐藏文件、`.DS_Store`、`__MACOSX`
 - [ ] 题面里的数字和单词是不是提示（大小写、下划线、缩写）
 - [ ] flag 格式是不是和假设的不一样（有的题是 `DASCTF{...}`、`ctfshow{...}`）
+- [ ] 是不是**动态实例题**（附件名是 UUID、flag 里带无意义长数字）→ 别人的 wp 值对你无效，必须自己这条链上拿
 - [ ] 是不是需要提交"解码后的中间结果"而不是最终 flag
 - [ ] 题目分类是否被我判错了（隐写题当密码题做）
 - [ ] 有没有更简单的解释（出题人往往不坏）

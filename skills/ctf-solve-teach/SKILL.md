@@ -31,8 +31,7 @@ metadata:
 
 ## 1. 开工：先建目录，再碰附件（禁止先 `cat` 再补目录）
 
-`<SKILL_DIR>` 指本 skill 所在目录：纯 skill 安装时是 `~/.dsh/skills/ctf-solve-teach`；
-通过 DSH 插件安装时，以宿主注入的 `Base directory for this skill` 为准（通常在 npm 全局目录下）。
+`<SKILL_DIR>` 指本 skill 所在目录（DSH 默认 `~/.dsh/skills/ctf-solve-teach`）。
 
 **Windows / PowerShell：**
 
@@ -127,7 +126,10 @@ TAO = **T**race（现象）→ **A**ssess（判型）→ **O**perate（动手）
 |---|---|---|
 | 文件头 ≠ 扩展名 | 改后缀 / 容器嵌套 | `ctf info`、`file`、十六进制看 magic |
 | PNG 打不开、CRC 错、尺寸怪 | 宽高被改 / 块被改 | `ctf png --fix`、pngcheck |
+| **图片能开但比 IEND 长** | **尾部附加数据** | `ctf info` 看差值 → 库 `carve_png_trailer.py` |
 | ZIP 要密码但能列目录 | 伪加密 / ZipCrypto / 明文攻击 | `ctf zip --unpseudo`、`bkcrack` |
+| **ZIP method=99 / 显示 AES** | **WinZip AES** | 库 `aes_zip_decrypt.py`（bkcrack 无效）+ hashcat `-m 13600` |
+| **.rar 报错 / 疑似套娃** | **RAR5 结构** | 库 `rar5parse.py` 看块表 |
 | 图片看不出东西 | LSB、位平面、通道分离、盲水印 | `ctf lsb --auto`、stegsolve、zsteg |
 | 两图几乎一样 | 像素差分 | `ctf imgdiff` |
 | 音频"刺啦"声 / 无声音 | 频谱图、LSB、DTMF、SSTV | `ctf spec`、`ctf wavlsb`、`ctf dtmf` |
@@ -155,6 +157,18 @@ TAO = **T**race（现象）→ **A**ssess（判型）→ **O**perate（动手）
 2. 回头查四个常被忽略的位置：文件尾部多余数据、元数据/EXIF、第二个附件或隐藏文件、题面文字里的暗示（大小写、数字、缩写）。
 3. 换维度：这个题如果换个解法会是什么？出题人想考的是哪个知识点？
 4. 允许给**部分结论**并明说卡在哪：`flag.txt` 写 `PARTIAL: ...`，README 的"卡壳与弯路"章节照实写。诚实比假装完成有价值。
+5. **半成品要留 STATUS.md**，别把模板原样扔在那：
+
+```markdown
+# STATUS · 未完成
+## 已确认的结构     ← 已知事实（块表、条目、尺寸）
+## 卡在哪           ← 具体到某个校验失败/某条路试过
+## 下一步建议       ← 按验证成本排序，写可直接跑的命令
+## 已有资产         ← 哪些脚本/产物已提升或可复用
+```
+
+> 反面教材：只留一个带 `TODO` 的空模板。下次你既不知道做到哪，
+> `check_doc.py` 也会因为 TODO 判 FAIL —— 两个人都被坑。
 
 ---
 
@@ -204,6 +218,45 @@ flag：…
 | 一次性脚本 | `scripts/` | 顶部写清用途、输入、输出 |
 | 结论 | `flag.txt`、`README.md` | 唯一权威来源 |
 | 过程 | `journal.md` | 时间顺序，允许丑 |
+
+### 6.1 脚本沉淀三阶段（别让好脚本烂在题目里）
+
+同一个脚本下次还会用到，但它不会自己跑到你面前。分三阶段管理：
+
+```text
+① 题目内      solves/<题>/scripts/foo.py        允许硬编码，快速验证想法
+② 通用化      去硬编码 + argparse + docstring + 实测一次
+③ 提升入库    <工作台>/library/<类别>/foo.py    加进库索引，标注验证状态
+```
+
+**提升到 ③ 的硬门槛（缺一条就别提）**：
+
+1. **真的跑通过**，不是"看起来对"。实测要有输出证据。
+2. **没有硬编码路径**（`D:\xxx\work\foo.png` 这种直接打回）。
+3. **有 `-h`**，参数自己能解释自己。
+4. **docstring 写清"为什么需要它"**，而不只是用法——半年后你会忘了当初为什么写。
+5. 在库索引里加一行，写清**验证状态**（用什么样本验的）。
+
+**不该提升的**：只对某一道题成立的逻辑、调试用的一次性探针、需要人工改中间变量的脚本。
+它们留在 `solves/<题>/scripts/` 就好，那是它们的归宿。
+
+**沉淀的标准**：下次遇到同类题，你能在 30 秒内想起"这个我写过"并直接调用。
+想不起来 = 没沉淀好，问题在索引不在脚本。
+
+### 6.2 改过工具要做回归
+
+动过工作台脚本或库脚本之后，用固定样本集验证没改坏：
+
+```bash
+# 重建自测样本（样本生成器本身在库里）
+python <工作台>/library/misc/gen_samples.py
+
+# 冒烟：每个子命令打一遍
+ctf info / exif / lsb --auto / zip --unpseudo / usb / dec
+```
+
+> 没有样本集的，就把这次题目里的关键一步固化成最小复现命令记进 journal，
+> 下次改工具时先跑它。**能复现的问题才是问题。**
 
 ---
 
