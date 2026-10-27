@@ -1,6 +1,6 @@
 {
   "name": "dsh-ctf-solve-teach",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "DSH 教学式 CTF 解题技能插件：边解边讲套路/工具/知识点，收尾在 solves/<题目名>/ 生成可复现 Writeup。",
   "type": "module",
   "main": "plugin/index.js",
