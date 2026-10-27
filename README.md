@@ -170,7 +170,17 @@ python skills/ctf-solve-teach/scripts/new_solve.py "题目名" --src 附件或�
 python skills/ctf-solve-teach/scripts/check_doc.py "solves/题目名"
 ```
 
+```bash
+# 收尾：把这道题收进案例库（成功/失败都跑）
+python skills/ctf-solve-teach/scripts/harvest.py --solves solves
+
+# 收尾：清掉能重建的中间产物（默认只报告，--apply 才删）
+python skills/ctf-solve-teach/scripts/prune.py "solves/题目名" --apply
+```
+
 `new_solve.py` 是幂等的：目录已存在时只补缺失文件，不会覆盖你写了一半的 README。
+`prune.py` 只删 `work/` 里的重货（>64MB）、`node_modules`、重复文件与缓存，
+`artifacts/` 原件和 README/journal/flag 一律不动。
 
 ---
 
@@ -193,7 +203,9 @@ ctf-solve-teach/                    # npm 包 dsh-ctf-solve-teach
     │   └── writeup-template.md     # README 模板
     ├── scripts/
     │   ├── new_solve.py            # 建目录骨架
-    │   └── check_doc.py            # 交付质量门
+    │   ├── check_doc.py            # 交付质量门（九章）
+    │   ├── harvest.py              # 收割案例库 cases.md
+    │   └── prune.py                # 收尾清理中间产物
     └── examples/                   # 真实跑通、已过质量门的示例
 ```
 

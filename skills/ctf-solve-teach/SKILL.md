@@ -214,6 +214,21 @@ python "$HOME/.dsh/skills/ctf-solve-teach/scripts/harvest.py" --solves solves
 反查表（标签 → 题）+ 反模式清单（这条路别走）+ 每题一张案例卡（识别 / 别走 / 工具 / 坑）。
 README 写得越规范、journal 里的失败记得越实，抽出来的卡片越好用——它同时是文档质量的镜子。
 
+6. 清理中间产物（**解出来没解出来都要做**）：
+
+```bash
+python "<SKILL_DIR>/scripts/prune.py" "solves/题目名"          # 先看会删什么
+python "<SKILL_DIR>/scripts/prune.py" "solves/题目名" --apply   # 确认后执行
+```
+
+删：`__pycache__`/`*.pyc`/系统垃圾、`work/**/node_modules`、`artifacts` 内完全重复的文件、
+`work` 里与原件相同的副本、`work` 里超过 64MB 的中间件（可由原件重建）、空文件与空目录。
+
+保：`README.md` / `journal.md` / `00-brief.md` / `flag*.txt` / `scripts/` / `artifacts/` 原件。
+
+没解出来的题同样跑一遍——保留 `00-brief.md`、`journal.md`（把卡点写清，`flag.txt` 写
+`PARTIAL: ...`），只清 `work` 里的重货。**下次回来接着做靠的是文档，不是那堆解包残留。**
+
 ### 5.2 README 写作硬要求
 
 - **结论前置**：开头 3 行之内给出 flag 和一句话解法。
