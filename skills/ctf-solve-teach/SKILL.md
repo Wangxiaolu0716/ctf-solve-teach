@@ -62,14 +62,20 @@ solves/<题目名>/
 
 ### 开工前 30 秒：先查案例库
 
-建目录之前，先按现象在 `references/cases.md` 里搜一遍：
+建目录之前，先按现象查案例库（工作台里有 `ctf` 就用命令，没有就 grep 文件）：
 
 ```bash
-grep -i "iend\|伪加密\|频谱\|rabbit" "<SKILL_DIR>/references/cases.md"
+ctf case iend              # 命中即输出：解法 / 识别 / 别走 / 工具 / 目录
+ctf case 伪加密 rabbit      # 多关键词取并集
+ctf case --tags            # 列出所有知识点标签
 ```
 
-它按**知识点标签**和**30 秒识别特征**反查历史题目——命中就直接跳 `solves/<题名>/README.md`
-看当时的命令和坑，比从零判型快得多；没命中才走下面的 TAO 循环。战后新增的题会自动进这个库。
+```bash
+grep -i "iend\|伪加密\|频谱" "<SKILL_DIR>/references/cases.md"   # 没有 ctf 时的退路
+```
+
+它按**知识点标签**、**30 秒识别特征**和**"这条路别走"**反查历史题目——命中就直接跳
+`solves/<题名>/README.md` 看当时的命令和坑，比从零判型快得多；没命中才走下面的 TAO 循环。
 
 ---
 
@@ -204,8 +210,9 @@ cd "<题目工作区>"
 python "$HOME/.dsh/skills/ctf-solve-teach/scripts/harvest.py" --solves solves
 ```
 
-它读 `solves/*/README.md`，重新生成 `references/cases.md`（反查表 + 案例卡）。
-README 写得越规范，抽出来的卡片越好用——这张卡片就是下次开局的第一手情报。
+它读 `solves/*/README.md` 和 `journal.md`，重新生成 `references/cases.md`：
+反查表（标签 → 题）+ 反模式清单（这条路别走）+ 每题一张案例卡（识别 / 别走 / 工具 / 坑）。
+README 写得越规范、journal 里的失败记得越实，抽出来的卡片越好用——它同时是文档质量的镜子。
 
 ### 5.2 README 写作硬要求
 

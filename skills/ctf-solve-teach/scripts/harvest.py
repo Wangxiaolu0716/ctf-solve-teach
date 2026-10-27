@@ -77,6 +77,37 @@ def first_para(block):
     return ""
 
 
+BAD_HEAD = re.compile(r"弯路|失败|死路|反例|踩坑|放弃")
+BT3 = chr(96) * 3
+
+
+def extract_avoid(text):
+    """只从 journal 的「弯路/失败」章节抽结论，避免把正文里的“别”当弯路。"""
+    out = []
+    blocks = re.split(r"^#{2,3}\s+", text, flags=re.M)[1:]
+    for b in blocks:
+        lines = b.splitlines()
+        if not lines:
+            continue
+        head, body = lines[0], lines[1:]
+        if not BAD_HEAD.search(head):
+            continue
+        for line in body:
+            s = line.strip()
+            if not s or s.startswith((">", "|", BT3, "### ")):
+                continue
+            s = re.sub(r"^[-*]\s*", "", s)
+            s = re.sub(r"^(现象|判断|解读|结论|教训|原因|结果)[：:]\s*", "", s)
+            s = s.replace("**", "").strip()
+            if len(s) < 10:
+                continue
+            if s not in out:
+                out.append(s[:80])
+            if len(out) >= 2:
+                return out
+    return out
+
+
 def load_case(d):
     readme = d / "README.md"
     if not readme.is_file():
@@ -102,6 +133,9 @@ def load_case(d):
             if ln and not ln.startswith("#") and ln != "TODO":
                 case["flag"] = ln
                 break
+    jr = d / "journal.md"
+    if jr.is_file():
+        case["avoid"] = extract_avoid(jr.read_text(encoding="utf-8", errors="replace"))
     if not case["points"]:
         case["points"] = re.findall(r"^###\s+(?:步骤\s*\d+\s*·\s*)?知识点｜(.+)$", t, re.M)[:4]
     return case
@@ -136,6 +170,12 @@ def render(cases):
     for tag in sorted(tag_map):
         out.append("| " + BT + tag + BT + " | " + ", ".join(sorted(set(tag_map[tag]))) + " |")
 
+    if any(c.get("avoid") for c in cases):
+        out += ["", "## 反模式清单（这条路别走）", ""]
+        for c in sorted(cases, key=lambda x: x["name"]):
+            for a in c.get("avoid", [])[:2]:
+                out.append("- **" + c["name"] + "**：" + a)
+
     out += ["", "## 按分类", ""]
     for cat in sorted(by_cat):
         out += ["### " + cat, "", "| 题目 | 一句话解法 | 关键工具 |", "|---|---|---|"]
@@ -163,6 +203,8 @@ def render(cases):
                 out.append("  - " + s)
         if c["traps"]:
             out.append("- 坑：" + "；".join(c["traps"]))
+        if c.get("avoid"):
+            out.append("- 别走：" + "；".join(c["avoid"][:2]))
         out.append("")
     return "\n".join(out).rstrip() + "\n"
 

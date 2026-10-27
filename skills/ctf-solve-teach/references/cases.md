@@ -94,6 +94,17 @@
 | `ZIP-05` | download |
 | `ZIP-06` | misc2-rar |
 
+## 反模式清单（这条路别走）
+
+- **crypto06**：想用最权威的 openssl 直接解
+- **crypto06**：openssl enc 支持 AES/DES/RC4 等，但不支持 Rabbit
+- **crypto2**：`node scripts/run_jsfuck.js work/x/file.txt` → `TYPE: undefined`
+- **crypto2**：上一轮猜"纯表达式返回字符串"是错的；`undefined` 说明尾部那次取值落空
+- **flag-jpg**：从 stegdetect 源码改出 `break_jphide_v5`，头部校验通过，`length=38`，但载荷 38 字节是随机值。
+- **flag-jpg**：头部正确、空口令正确，但载荷流/头部长度处理与原版 GUI 不一致。
+- **vm-106-disk**：第一版用 `'<HHHIIIIIIII'` 解 inode，读出来 `mode=0o40755 size=2869428224 links=524290`，明显
+- **vm-106-disk**：字段顺序凭记忆写错了 —— `i_gid` 在 0x18、`i_links_count` 在 0x1A，不在紧接 uid 的位置；`i_size` 只有低 32
+
 ## 按分类
 
 ### crypto
@@ -180,6 +191,7 @@
   - **换成无 salt 的密文** → `Salted__` 不存在，KDF 直接 `MD5(pass)` 或 `MD5(pass+salt)`。
   - **换成 3DES** → 长度必是 8 倍数；crypto-js 里叫 `TripleDES`。
 - 坑：判型；步骤 3；步骤 4
+- 别走：想用最权威的 openssl 直接解；openssl enc 支持 AES/DES/RC4 等，但不支持 Rabbit
 
 ### crypto2
 
@@ -194,6 +206,7 @@
   - **加了字符串混淆 / 反调试** → 保留 `hook_jsfuck.js` 的 Proxy 思路，把 `eval`、`Function`、`setTimeout`、`atob` 一起挂 Proxy，一次性把"动态生成的代码"全打出来。
   - **附件变成 pcap / 内存镜像** → 先找浏览器 `console` 输出或剪贴板；这类题的 flag 常常就躺在 `console.log` 的抓包里。
 - 坑：步骤 3 拿到 undefined；判型第一反应
+- 别走：`node scripts/run_jsfuck.js work/x/file.txt` → `TYPE: undefined`；上一轮猜"纯表达式返回字符串"是错的；`undefined` 说明尾部那次取值落空
 
 ### crypto3
 
@@ -250,6 +263,7 @@
   - `jpseek` 只说 `Nothing done` 而不是 `Pass phrase wrong` → 大概率是空口令被 CLI 拒绝。
   - 如果换成 v3 图 → Linux `jpseek` 可用，但仍要避开空口令。
 - 坑：jpseek 输出随机 31 KB；自写 v5 提取器；猜口令
+- 别走：从 stegdetect 源码改出 `break_jphide_v5`，头部校验通过，`length=38`，但载荷 38 字节是随机值。；头部正确、空口令正确，但载荷流/头部长度处理与原版 GUI 不一致。
 
 ### gz-bf87ed29
 
@@ -340,6 +354,7 @@
   - 换成 **Windows 磁盘（NTFS）**：删除恢复看 `$MFT` 记录里的 `$FILE_NAME`、`$DATA` 的 runlist，工具换 `MFTECmd`/`photorec`；"文件名字在但内容没了"的等价物是 MFT 记录被标记为未使用。
   - 换成 **ext4 journal 里翻旧 extent**：若数据块被覆盖，还能回放 `journal`（inode 8，16 MiB）里的旧 `ext4_extent` 事务；本题 journal 全零（挂载后没做过写操作），所以没走这条路。
 - 坑：找分区表；看到 4 个 ext 魔数；7z l 只有 Journal
+- 别走：第一版用 `'<HHHIIIIIIII'` 解 inode，读出来 `mode=0o40755 size=2869428224 links=524290`，明显；字段顺序凭记忆写错了 —— `i_gid` 在 0x18、`i_links_count` 在 0x1A，不在紧接 uid 的位置；`i_size` 只有低 32
 
 ### welcome2
 

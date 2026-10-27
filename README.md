@@ -84,6 +84,27 @@ solves/真的假的/
 
 ---
 
+## 越做越快：经验复用
+
+每道题做完，收尾第 5 步会跑一次 `scripts/harvest.py`。它扫 `solves/*/README.md` 与
+`journal.md`，把每道题压成一张卡：
+
+- **反查表**：知识点标签 → 哪些题出现过
+- **反模式清单**：这条路别走（来自 journal 里记下的失败分支）
+- **案例卡**：解法 / 30 秒识别特征 / 别走 / 工具 / 坑
+
+下次遇到同类题，开工前先查：
+
+```bash
+ctf case iend           # 命中即输出：解法、识别特征、别走、工具、题目录
+ctf case 伪加密 rabbit    # 多关键词取并集
+ctf case --tags         # 列出所有知识点标签
+```
+
+`ctf` 是配套 Windows 工作台的 CLI；换环境就 `grep` 同一个 `references/cases.md`。
+
+---
+
 ## 安装
 
 本仓库同时是 **DSH 插件**（npm 包 `dsh-ctf-solve-teach`）和 **独立 skill**，按需选一种。
