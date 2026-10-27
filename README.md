@@ -3,6 +3,7 @@
 > 一个给 AI 用的 Skill：**解 CTF 题的时候不许闷头算答案，必须边解边讲——这一步是什么套路、为什么用这个工具、背后的知识点是什么。**
 > 收尾自动在 `solves/<题目名>/` 里产出可复现的完整 Writeup。
 
+[![awesome · DSH plugin](https://awesome-dsh-plugin.com/badge.svg)](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![DSH Plugin](https://img.shields.io/badge/DSH-Plugin-5b8def)
 ![Agent Skill](https://img.shields.io/badge/Agent-Skill-blue)

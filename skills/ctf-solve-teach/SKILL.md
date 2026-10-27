@@ -60,6 +60,17 @@ solves/<题目名>/
 
 题目名就用赛题原名（允许中文），脚本会自动处理非法字符。**一个题目一个目录，不要复用。**
 
+### 开工前 30 秒：先查案例库
+
+建目录之前，先按现象在 `references/cases.md` 里搜一遍：
+
+```bash
+grep -i "iend\|伪加密\|频谱\|rabbit" "<SKILL_DIR>/references/cases.md"
+```
+
+它按**知识点标签**和**30 秒识别特征**反查历史题目——命中就直接跳 `solves/<题名>/README.md`
+看当时的命令和坑，比从零判型快得多；没命中才走下面的 TAO 循环。战后新增的题会自动进这个库。
+
 ---
 
 ## 2. 主循环：TAO 七问（每一步都走一遍）
@@ -186,6 +197,16 @@ python "$HOME/.dsh/skills/ctf-solve-teach/scripts/check_doc.py" "solves/题目�
 
 4. FAIL 就补齐，直到 PASS。**没 PASS 不许说"做完了"。**
 
+5. 过门之后再跑一次收割，把**过关的** README 收进案例库（下次才更快）：
+
+```bash
+cd "<题目工作区>"
+python "$HOME/.dsh/skills/ctf-solve-teach/scripts/harvest.py" --solves solves
+```
+
+它读 `solves/*/README.md`，重新生成 `references/cases.md`（反查表 + 案例卡）。
+README 写得越规范，抽出来的卡片越好用——这张卡片就是下次开局的第一手情报。
+
 ### 5.2 README 写作硬要求
 
 - **结论前置**：开头 3 行之内给出 flag 和一句话解法。
@@ -278,4 +299,5 @@ ctf info / exif / lsb --auto / zip --unpseudo / usb / dec
 | `references/triage.md` | 刚拿到附件，不知道从哪下手 |
 | `references/toolbox.md` | 要选工具、要确认参数、想知道备选方案 |
 | `references/knowledge-index.md` | 需要把某类考点讲透、找练习方向 |
+| `references/cases.md` | **开工前必读**：按现象反查历史题目（自动生成） |
 | `references/writeup-template.md` | 收尾写 README 时 |
